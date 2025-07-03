@@ -2,7 +2,7 @@ name: Run All Jobs
 
 on:
   schedule:
-    - cron: '*/3 * * * *'  # ⏱️ Every 1 minute (UTC)
+    - cron: '*/5 * * * *'  # ⏱️ Every 1 minute (UTC)
   workflow_dispatch:       # ✅ Allow manual run from GitHub UI
 
 jobs:
