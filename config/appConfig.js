@@ -18,10 +18,22 @@ const configureApp = () => {
     .catch(err => console.error('MongoDB connection error:', err));
 
   // Middleware
-  app.use(cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
-    credentials: true
-  }));
+  const allowedOrigins = process.env.FRONTEND_URL.split(",");
+  console.log("CORS Origin:", process.env.FRONTEND_URL);
+
+  const corsOptions = {
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+  };
+  app.use(cors(corsOptions));
   
   app.use(cookieParser());
   app.use(bodyParser.json());
