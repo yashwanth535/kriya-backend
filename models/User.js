@@ -9,8 +9,7 @@ const userSchema = new mongoose.Schema({
     trim: true
   },
   pass: { 
-    type: String,
-    required: true
+    type: String
   },
   createdAt: {
     type: Date,

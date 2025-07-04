@@ -71,7 +71,11 @@ const jobSchema = new mongoose.Schema({
   logs: {
     type: [logSchema],
     default: []
-  }
+  },
+  nextRun: {
+    type: Date,
+    default: null
+  }  
 });
 
 module.exports = mongoose.model('Job', jobSchema);

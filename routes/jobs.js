@@ -10,6 +10,7 @@ const {
   testCallBack,
   runJob
 } = require('../controllers/jobController');
+const {runJob} = require('../controllers/runAllController');
 // Job CRUD operations
 router.post('/', createJob);
 router.get('/', getJobs);
