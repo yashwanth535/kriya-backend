@@ -76,6 +76,6 @@ const jobSchema = new mongoose.Schema({
     type: Date,
     default: null
   }  
-});
+},{ versionKey: false });
 
 module.exports = mongoose.model('Job', jobSchema);

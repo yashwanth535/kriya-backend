@@ -7,10 +7,8 @@ const {
   updateJob,
   deleteJob,
   getJobLogs,
-  testCallBack,
-  runJob
+  testCallBack
 } = require('../controllers/jobController');
-const {runJob} = require('../controllers/runAllController');
 // Job CRUD operations
 router.post('/', createJob);
 router.get('/', getJobs);
@@ -21,8 +19,5 @@ router.post('/test-callback',testCallBack);
 
 // Job logs and execution
 router.get('/:id/logs', getJobLogs);
-
-// Run all jobs (cron-like trigger)
-router.post('/run-all', runJob);
 
 module.exports = router; 
