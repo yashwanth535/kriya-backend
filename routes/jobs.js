@@ -7,6 +7,7 @@ const {
   updateJob,
   deleteJob,
   getJobLogs,
+  executeJob,
   testCallBack
 } = require('../controllers/jobController');
 // Job CRUD operations
@@ -15,6 +16,7 @@ router.get('/', getJobs);
 router.get('/:id', getJob);
 router.put('/:id', updateJob);
 router.delete('/:id', deleteJob);
+router.post('/:id/execute', executeJob);
 router.post('/test-callback',testCallBack);
 
 // Job logs and execution

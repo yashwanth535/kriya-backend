@@ -1,5 +1,6 @@
 const Job = require("../models/Job");
 const { verifyToken } = require("../middleware/jwt");
+const axios = require('axios');
 
 // Extract userId from cookie
 const getUserIdFromCookie = (req) => {
@@ -128,7 +129,88 @@ const getJobLogs = async (req, res) => {
   }
 };
 
-const axios = require('axios');
+// Execute a specific job manually
+const executeJob = async (req, res) => {
+  const userId = getUserIdFromCookie(req);
+  if (!userId) return res.status(401).json({ error: "Unauthorized" });
+
+  try {
+    const job = await Job.findOne({ _id: req.params.id, userId });
+    if (!job) return res.status(404).json({ error: "Job not found" });
+
+    if (!job.isActive) {
+      return res.status(400).json({ error: "Cannot execute inactive job" });
+    }
+
+    // Execute the job
+    let response;
+    let logEntry = {
+      timestamp: new Date(),
+      status: 'success',
+      responseCode: null,
+      responseBody: null,
+      errorMessage: null
+    };
+
+    try {
+      if (job.method === 'POST') {
+        let parsedBody = {};
+        try {
+          parsedBody = job.body ? JSON.parse(job.body) : {};
+        } catch (e) {
+          throw new Error('Invalid JSON in job body');
+        }
+        response = await axios.post(job.callbackUrl, parsedBody, {
+          headers: { 'Content-Type': 'application/json' },
+          timeout: 30000 // 30 seconds timeout
+        });
+      } else {
+        response = await axios.get(job.callbackUrl, { timeout: 30000 });
+      }
+
+      logEntry.responseCode = response.status;
+      logEntry.responseBody = JSON.stringify(response.data).substring(0, 500); // Limit response body length
+      
+      if (response.status < 200 || response.status >= 300) {
+        logEntry.status = 'failure';
+        logEntry.errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+      }
+
+    } catch (error) {
+      logEntry.status = 'failure';
+      logEntry.errorMessage = error.message;
+      
+      if (error.response) {
+        logEntry.responseCode = error.response.status;
+        logEntry.responseBody = JSON.stringify(error.response.data).substring(0, 500);
+      }
+    }
+
+    // Update job with new log and last executed time
+    job.logs.push(logEntry);
+    job.lastExecuted = new Date();
+    
+    // Keep only last 100 logs to prevent database bloat
+    if (job.logs.length > 100) {
+      job.logs = job.logs.slice(-100);
+    }
+
+    await job.save();
+
+    res.json({ 
+      message: "Job executed successfully", 
+      log: logEntry,
+      job: {
+        lastExecuted: job.lastExecuted,
+        logs: job.logs.slice(-10) // Return last 10 logs
+      }
+    });
+
+  } catch (error) {
+    console.error("Execute job error:", error);
+    res.status(500).json({ error: "Error executing job" });
+  }
+};
 
 const testCallBack = async (req, res) => {
   const { callbackUrl, method, body } = req.body;
@@ -175,6 +257,7 @@ module.exports = {
   updateJob,
   deleteJob,
   getJobLogs,
+  executeJob,
   testCallBack,
 };
 
