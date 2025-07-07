@@ -5,17 +5,15 @@ const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const dotenv = require('dotenv');
+const mongoConnect = require("./mongoConnect");
 
 dotenv.config();
 
-const configureApp = () => {
+const configureApp = async () => {
   const app = express();
 
   // Database connection
-  const MONGODB_URI = process.env.MONGODB_URI;
-  mongoose.connect(MONGODB_URI)
-    .then(() => console.log('Connected to MongoDB'))
-    .catch(err => console.error('MongoDB connection error:', err));
+  await mongoConnect();
 
   // Middleware
   const allowedOrigins = process.env.FRONTEND_URL.split(",");
