@@ -1,3 +1,5 @@
+const mongoose = require("mongoose");
+
 const { configureApp } = require("./config/appConfig");
 const authRoutes = require("./routes/auth");
 const jobRoutes = require("./routes/jobs")
@@ -17,9 +19,15 @@ app.get("/api/ping", (req, res) => {
   res.send("Kriya Cron Job Manager API is running");
 });
 
-// Health check endpoint
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', message: 'Kriya Cron Job Manager API is running' });
+app.get('/api/health', async (req, res) => {
+  try {
+    // Ping the DB to check connection
+    await mongoose.connection.db.admin().ping();
+
+    res.status(200).json({ status: 'ok', message: 'MongoDB is connected' });
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: 'MongoDB is NOT connected', error: err.message });
+  }
 });
 
 app.use("/", authRoutes);
