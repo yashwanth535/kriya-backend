@@ -234,10 +234,14 @@ const google_signin = async (req, res) => {
     const { sub: googleId, email, name, picture } = payload;
     let user = await User.findOne({ email });
 
+    let hasPassword = false;
+
     if (!user) {
       // If user doesn't exist, create a new user record (excluding password)
       user = new User({ email });
       await user.save();
+    } else {
+      hasPassword = !!user.pass; // Check if password exists (not null/undefined/empty)
     }
 
     const token = generateToken(user._id.toString());
@@ -249,12 +253,17 @@ const google_signin = async (req, res) => {
       sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
       maxAge: 15 * 24 * 60 * 60 * 1000, // 15 days
     });
-    
 
     return res.status(200).json({
       success: true,
       token: credential,
-      user: { _id: googleId, email, name, picture },
+      user: {
+        _id: googleId,
+        email,
+        name,
+        picture,
+        pass: hasPassword,
+      },
       message: "Google sign-in successful",
     });
 
@@ -263,6 +272,7 @@ const google_signin = async (req, res) => {
     return res.status(500).json({ success: false, message: "Server error during authentication" });
   }
 };
+
 
 module.exports = {
   signIn,
