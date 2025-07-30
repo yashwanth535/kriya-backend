@@ -250,6 +250,29 @@ const testCallBack = async (req, res) => {
   }
 };
 
+// Toggle job active status
+const toggleJobStatus = async (req, res) => {
+  const userId = getUserIdFromCookie(req);
+  if (!userId) return res.status(401).json({ error: "Unauthorized" });
+
+  try {
+    const job = await Job.findOne({ _id: req.params.id, userId });
+    if (!job) return res.status(404).json({ error: "Job not found" });
+
+    // Toggle the isActive status
+    job.isActive = !job.isActive;
+    await job.save();
+
+    res.json({ 
+      message: `Job ${job.isActive ? 'activated' : 'paused'} successfully`, 
+      job 
+    });
+  } catch (error) {
+    console.error("Toggle job status error:", error);
+    res.status(500).json({ error: "Error toggling job status" });
+  }
+};
+
 module.exports = {
   createJob,
   getJobs,
@@ -259,5 +282,6 @@ module.exports = {
   getJobLogs,
   executeJob,
   testCallBack,
+  toggleJobStatus,
 };
 
